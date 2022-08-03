@@ -1,16 +1,54 @@
-import React , {useState} from 'react'
+import React , {useState , useEffect} from 'react'
 import "./TodoStyle.css"
 
-function Todo() {
+//LOCAL STORAGE DATA BACK
+
+const getLocalData = () => {
+    const lists = localStorage.getItem("mytodolist");
+
+    if (lists) {
+        return JSON.parse(lists);
+    }
+
+    else{
+        return [];
+    }
+
+
+}
+
+
+
+const Todo = () => {
 
     const [inputdata ,  setInputData] = useState ("")
-    const [items ,  setItems] = useState ([])
+    const [items ,  setItems] = useState (getLocalData())
+    const [isEditeItem , setIsEditItem] = useState("")
+    const [toggleButton,setToggleButton] = useState(false)
 
     //ADD ITEM
     const addItem = () => {
         if (!inputdata) {
             alert("fill any task")
         }
+
+        else if(inputdata && toggleButton){
+            setItems(
+                items.map((curElem) => {
+                    if(curElem.id === isEditeItem){
+                        return{...curElem , name: inputdata}
+                    }
+
+                    else{
+                        return curElem;
+                    }
+                })
+            )
+            setInputData("");
+            setIsEditItem(null)
+            setToggleButton(false)
+        }
+       
 
         else{
             const myNewInputData = {
@@ -21,6 +59,19 @@ function Todo() {
             setInputData("");
         }
     }
+
+    //EDIT ITEM
+
+    const editItem = (index) => {
+              const item_todo_edited = items.find((curElem) => {
+                return curElem.id === index;
+              })
+
+              setInputData(item_todo_edited.name);
+              setIsEditItem(index)
+              setToggleButton(true)
+    }
+
 
     // DELETE ITEMS
 
@@ -38,6 +89,15 @@ function Todo() {
         setItems([])
     }
 
+    //LOCAL STORAGE
+
+    useEffect(() => {
+      localStorage.setItem("mytodolist" , JSON.stringify(items))
+    }, [items])
+    
+  
+   
+
   return (
     <>
         <div className='main-div'>
@@ -52,8 +112,12 @@ function Todo() {
                     className='form-control'
                     value={inputdata}
                     onChange={ (event) => setInputData (event.target.value)}/>
-                     
-                    <i class="fa fa-plus add-btn" onClick={addItem}></i>
+
+
+                     {toggleButton ? 
+                     (<i class="far fa-edit add-btn" onClick={addItem}></i>) : 
+                     (<i class="fa fa-plus add-btn" onClick={addItem}></i>)}
+            
                 </div>
 
                 {/* SHOW ITEMS */}
@@ -64,7 +128,7 @@ function Todo() {
                           <div className='eachItem' key={curElem.id}>
                                <h3>{curElem.name}</h3>
                                    <div className='todo-btn'>
-                                      <i class="far fa-edit add-btn"></i>
+                                      <i class="far fa-edit add-btn" onClick={() => editItem(curElem.id)}></i>
                                      <i class="far fa-trash-alt add-btn" onClick={() => deleteItem(curElem.id)}></i>
                                    </div>
                           </div>
